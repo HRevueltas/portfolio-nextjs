@@ -3,12 +3,70 @@ import AnimatedGreeting from "./components/AnimatedGreeting";
 import { motion } from "motion/react";
 import LabIcon from "./components/LabIcon";
 import AnimatedLightbulb from "./components/AnimatedLightbulb";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ImageCarousel from "./components/ImageCarousel";
 import { Clock } from "lucide-react";
 
 export default function Home() {
   const [isHovered, setIsHovered] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [expandedDescriptions, setExpandedDescriptions] = useState<{[key: string]: boolean}>({});
+
+  const journalImages = [
+    { src: "journal-1.png", title: "Main Interface", description: "Clean and intuitive diary interface" },
+    { src: "journal-image-viewer.png", title: "Image Viewer", description: "Gallery view for attached images" },
+    { src: "journal-search.png", title: "Search Feature", description: "Quick search through diary entries" },
+    { src: "journal-theme.png", title: "Theme Options", description: "Customizable themes and appearance" }
+  ];
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % journalImages.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + journalImages.length) % journalImages.length);
+  };
+
+  const toggleDescription = (projectId: string) => {
+    setExpandedDescriptions(prev => ({
+      ...prev,
+      [projectId]: !prev[projectId]
+    }));
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (selectedProject === 'journal') {
+        switch (e.key) {
+          case 'ArrowLeft':
+            e.preventDefault();
+            prevSlide();
+            break;
+          case 'ArrowRight':
+            e.preventDefault();
+            nextSlide();
+            break;
+          case 'Escape':
+            e.preventDefault();
+            setSelectedProject(null);
+            setCurrentSlide(0);
+            break;
+        }
+      }
+    };
+
+    if (selectedProject === 'journal') {
+      document.addEventListener('keydown', handleKeyPress);
+      document.body.style.overflow = 'hidden'; // Prevent background scroll
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress);
+      document.body.style.overflow = 'unset';
+    };
+  }, [selectedProject, nextSlide, prevSlide]);
   return (
     <div className="w-full min-h-screen bg-[var(--color-bg)] text-[var(--color-high-contrast)]">
       {/* Hero Section */}
@@ -136,210 +194,208 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Project Card 1 */}
-            <div className="bg-[var(--color-gray-2)] border border-[var(--color-gray-6)] rounded-xl p-0 hover:border-[var(--color-gray-8)] transition-all duration-300 overflow-hidden">
-              {/* Image Placeholder */}
-              <div className="w-full h-48 bg-[var(--color-gray-4)] flex items-center justify-center">
-                <svg
-                  className="w-16 h-16 text-gray-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <rect
-                    x="3"
-                    y="3"
-                    width="18"
-                    height="18"
-                    rx="2"
-                    ry="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                  />
-                  <circle
-                    cx="8.5"
-                    cy="8.5"
-                    r="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                  />
-                  <path
-                    d="m21 15-3.086-3.086a2 2 0 00-2.828 0L6 21"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                  />
-                </svg>
+            {/* Journal App Project */}
+            <div 
+              className={`border border-[var(--color-gray-6)] rounded-xl p-0 hover:border-[var(--color-gray-8)] transition-all duration-300 overflow-hidden cursor-pointer flex flex-col ${expandedDescriptions['journal'] ? 'h-auto' : 'h-[500px]'}`}
+              onClick={() => setSelectedProject('journal')}
+            >
+              {/* Project Image */}
+              <div className="w-full h-64 overflow-hidden flex-shrink-0">
+                <img
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  src="journal-1.png"
+                  alt="Journal App - Personal Digital Diary"
+                  loading="lazy"
+                />
               </div>
 
               {/* Content */}
               <motion.div
-                className="p-6"
+                className="p-6 flex-1 flex flex-col justify-between"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
               >
-                <h3 className="text-20 font-600 text-[var(--color-high-contrast)] mb-3">
-                  Task Manager Pro
-                </h3>
-                <p className="text-14 text-gray-11 leading-relaxed">
-                  A full-stack task management application with real-time
-                  collaboration, built with Next.js and PostgreSQL.
-                </p>
+                <div>
+                  <h3 className="text-20 font-600 text-[var(--color-high-contrast)] mb-3">
+                    Journal App - Personal Digital Diary
+                  </h3>
+                  <div className="mb-4">
+                    <p className={`text-14 text-gray-11 leading-relaxed ${!expandedDescriptions['journal'] ? 'line-clamp-3' : ''}`}>
+                      Modern web application for managing a personal diary with secure authentication, note editor, and image gallery. Developed with React, Material-UI, and Firebase. This application features a clean and intuitive interface that allows users to create, edit, and organize their personal thoughts and memories in a secure digital format.
+                    </p>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleDescription('journal');
+                      }}
+                      className="text-12 text-[var(--color-blue-11)] hover:text-[var(--color-blue-12)] mt-1 transition-colors"
+                    >
+                      {expandedDescriptions['journal'] ? 'See less' : 'See more'}
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Tech Stack */}
+                <div className="flex flex-wrap gap-2 pb-2">
+                  <span className="px-2 py-1 text-xs bg-[var(--color-gray-4)] text-gray-11 rounded">React</span>
+                  <span className="px-2 py-1 text-xs bg-[var(--color-gray-4)] text-gray-11 rounded">Material-UI</span>
+                  <span className="px-2 py-1 text-xs bg-[var(--color-gray-4)] text-gray-11 rounded">Firebase</span>
+                  <span className="px-2 py-1 text-xs bg-[var(--color-gray-4)] text-gray-11 rounded">Authentication</span>
+                </div>
               </motion.div>
             </div>
 
-            {/* Project Card 2 */}
-            <div className="bg-[var(--color-gray-2)] border border-[var(--color-gray-6)] rounded-xl p-0 hover:border-[var(--color-gray-8)] transition-all duration-300 overflow-hidden">
-              {/* Image Placeholder */}
-              <div className="w-full h-48 bg-[var(--color-gray-4)] flex items-center justify-center">
-                <svg
-                  className="w-16 h-16 text-gray-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <rect
-                    x="3"
-                    y="3"
-                    width="18"
-                    height="18"
-                    rx="2"
-                    ry="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                  />
-                  <circle
-                    cx="8.5"
-                    cy="8.5"
-                    r="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                  />
-                  <path
-                    d="m21 15-3.086-3.086a2 2 0 00-2.828 0L6 21"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                  />
-                </svg>
+            {/* Coming Soon Card */}
+            <div className={`border border-[var(--color-gray-6)] rounded-xl p-0 hover:border-[var(--color-gray-8)] transition-all duration-300 overflow-hidden border-dashed flex flex-col ${expandedDescriptions['coming-soon'] ? 'h-auto' : 'h-[500px]'}`}>
+              {/* Coming Soon Visual */}
+              <div className="w-full h-64 bg-gradient-to-br from-[var(--color-gray-2)] to-[var(--color-gray-3)] flex items-center justify-center flex-shrink-0">
+                <div className="text-center space-y-4">
+                  <div className="w-16 h-16 mx-auto bg-[var(--color-gray-4)] rounded-full flex items-center justify-center">
+                    <svg 
+                      className="w-8 h-8 text-gray-9" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={1.5} 
+                        d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-600 text-[var(--color-high-contrast)] mb-1">
+                      More Projects Coming Soon
+                    </h3>
+                    <p className="text-sm text-gray-11">
+                      Including AI-powered applications
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Content */}
-              <div className="p-6">
-                <h3 className="text-20 font-600 text-[var(--color-high-contrast)] mb-3">
-                  E-Commerce API
-                </h3>
-                <p className="text-14 text-gray-11 leading-relaxed">
-                  RESTful API for e-commerce platform with authentication,
-                  payment processing, and inventory management.
-                </p>
-              </div>
-            </div>
-
-            {/* Project Card 3 */}
-            <div className="bg-[var(--color-gray-2)] border border-[var(--color-gray-6)] rounded-xl p-0 hover:border-[var(--color-gray-8)] transition-all duration-300 overflow-hidden">
-              {/* Image Placeholder */}
-              <div className="w-full h-48 bg-[var(--color-gray-4)] flex items-center justify-center">
-                <svg
-                  className="w-16 h-16 text-gray-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <rect
-                    x="3"
-                    y="3"
-                    width="18"
-                    height="18"
-                    rx="2"
-                    ry="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                  />
-                  <circle
-                    cx="8.5"
-                    cy="8.5"
-                    r="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                  />
-                  <path
-                    d="m21 15-3.086-3.086a2 2 0 00-2.828 0L6 21"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                  />
-                </svg>
-              </div>
-
-              {/* Content */}
-              <div className="p-6">
-                <h3 className="text-20 font-600 text-[var(--color-high-contrast)] mb-3">
-                  Analytics Dashboard
-                </h3>
-                <p className="text-14 text-gray-11 leading-relaxed">
-                  Real-time analytics dashboard with interactive charts and data
-                  visualization using React and D3.js.
-                </p>
-              </div>
-            </div>
-
-            {/* Project Card 4 */}
-            <div className="bg-[var(--color-gray-2)] border border-[var(--color-gray-6)] rounded-xl p-0 hover:border-[var(--color-gray-8)] transition-all duration-300 overflow-hidden">
-              {/* Image Placeholder */}
-              <div className="w-full h-48 bg-[var(--color-gray-4)] flex items-center justify-center">
-                <svg
-                  className="w-16 h-16 text-gray-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <rect
-                    x="3"
-                    y="3"
-                    width="18"
-                    height="18"
-                    rx="2"
-                    ry="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                  />
-                  <circle
-                    cx="8.5"
-                    cy="8.5"
-                    r="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                  />
-                  <path
-                    d="m21 15-3.086-3.086a2 2 0 00-2.828 0L6 21"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                  />
-                </svg>
-              </div>
-
-              {/* Content */}
-              <div className="p-6">
-                <h3 className="text-20 font-600 text-[var(--color-high-contrast)] mb-3">
-                  DevTools CLI
-                </h3>
-                <p className="text-14 text-gray-11 leading-relaxed">
-                  Command-line tool for developers to automate project setup,
-                  code formatting, and deployment workflows.
-                </p>
-              </div>
+              <motion.div
+                className="p-6 flex-1 flex flex-col justify-between"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+              >
+                <div>
+                  <h3 className="text-20 font-600 text-[var(--color-high-contrast)] mb-3">
+                    Exciting Projects in Development
+                  </h3>
+                  <div className="mb-4">
+                    <p className={`text-14 text-gray-11 leading-relaxed ${!expandedDescriptions['coming-soon'] ? 'line-clamp-3' : ''}`}>
+                      Currently working on innovative projects that leverage cutting-edge technologies including AI/ML, advanced web frameworks, and cloud services. Stay tuned for amazing applications! These upcoming projects will showcase the integration of artificial intelligence with modern web development practices, creating powerful and user-friendly solutions for various industries.
+                    </p>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleDescription('coming-soon');
+                      }}
+                      className="text-12 text-[var(--color-blue-11)] hover:text-[var(--color-blue-12)] mt-1 transition-colors"
+                    >
+                      {expandedDescriptions['coming-soon'] ? 'See less' : 'See more'}
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Upcoming Tech Stack */}
+                <div className="flex flex-wrap gap-2 pb-2">
+                  <span className="px-2 py-1 text-xs bg-[var(--color-gray-4)] text-gray-11 rounded">AI/ML</span>
+                  <span className="px-2 py-1 text-xs bg-[var(--color-gray-4)] text-gray-11 rounded">Next.js</span>
+                  <span className="px-2 py-1 text-xs bg-[var(--color-gray-4)] text-gray-11 rounded">TypeScript</span>
+                  <span className="px-2 py-1 text-xs bg-[var(--color-gray-4)] text-gray-11 rounded">Cloud Services</span>
+                </div>
+              </motion.div>
             </div>
           </div>
+
+          {/* Image Modal - Slideshow */}
+          {selectedProject === 'journal' && (
+            <div 
+              className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-50"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                  setSelectedProject(null);
+                  setCurrentSlide(0);
+                }
+              }}
+            >
+              <div className="relative w-full h-full flex items-center justify-center p-4">
+                {/* Close Button */}
+                <button 
+                  onClick={() => {
+                    setSelectedProject(null);
+                    setCurrentSlide(0);
+                  }}
+                  className="absolute top-4 right-4 z-10 text-[var(--color-high-contrast)] hover:text-gray-9 transition-colors bg-[var(--color-bg)] bg-opacity-90 backdrop-blur-sm rounded-full p-2 border border-[var(--color-gray-6)]"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+
+                {/* Previous Button */}
+                <button 
+                  onClick={prevSlide}
+                  className="absolute left-4 z-10 text-[var(--color-high-contrast)] hover:text-gray-9 transition-colors bg-[var(--color-bg)] bg-opacity-90 backdrop-blur-sm rounded-full p-3 border border-[var(--color-gray-6)]"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+
+                {/* Next Button */}
+                <button 
+                  onClick={nextSlide}
+                  className="absolute right-4 z-10 text-[var(--color-high-contrast)] hover:text-gray-9 transition-colors bg-[var(--color-bg)] bg-opacity-90 backdrop-blur-sm rounded-full p-3 border border-[var(--color-gray-6)]"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+
+                {/* Slide Content */}
+                <div className="max-w-5xl max-h-[90vh] flex flex-col items-center">
+                  <div className="relative mb-4">
+                    <img 
+                      src={journalImages[currentSlide].src} 
+                      alt={journalImages[currentSlide].title}
+                      className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-2xl"
+                    />
+                  </div>
+                  
+                  {/* Image Info */}
+                  <div className="text-center space-y-1 mt-4">
+                    <h3 className="text-lg font-500 text-[var(--color-high-contrast)]">
+                      {journalImages[currentSlide].title}
+                    </h3>
+                    <p className="text-gray-11 text-sm opacity-75">
+                      {journalImages[currentSlide].description}
+                    </p>
+                  </div>
+
+                  {/* Slide Indicators */}
+                  <div className="flex space-x-2 mt-4">
+                    {journalImages.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentSlide(index)}
+                        className={`w-3 h-3 rounded-full transition-colors border ${
+                          index === currentSlide 
+                            ? 'bg-[var(--color-high-contrast)] border-[var(--color-high-contrast)]' 
+                            : 'bg-transparent border-[var(--color-gray-8)] hover:bg-[var(--color-gray-6)]'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Lab Section */}
