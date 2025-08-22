@@ -335,7 +335,9 @@
     }
 }
 
+
 /* Custom Line Clamp Utility */
+
 .line-clamp-3 {
     display: -webkit-box;
     -webkit-line-clamp: 3;

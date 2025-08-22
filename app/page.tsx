@@ -3,7 +3,7 @@ import AnimatedGreeting from "./components/AnimatedGreeting";
 import { motion } from "motion/react";
 import LabIcon from "./components/LabIcon";
 import AnimatedLightbulb from "./components/AnimatedLightbulb";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ImageCarousel from "./components/ImageCarousel";
 import { Clock } from "lucide-react";
 
@@ -12,12 +12,14 @@ export default function Home() {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [expandedDescriptions, setExpandedDescriptions] = useState<{[key: string]: boolean}>({});
+  const [showSeeMore, setShowSeeMore] = useState<{[key: string]: boolean}>({});
+  const textRefs = useRef<{[key: string]: HTMLParagraphElement | null}>({});
 
   const journalImages = [
-    { src: "journal-1.png", title: "Main Interface", description: "Clean and intuitive diary interface" },
-    { src: "journal-image-viewer.png", title: "Image Viewer", description: "Gallery view for attached images" },
-    { src: "journal-search.png", title: "Search Feature", description: "Quick search through diary entries" },
-    { src: "journal-theme.png", title: "Theme Options", description: "Customizable themes and appearance" }
+    { src: "journal-1.webp", title: "Main Interface", description: "Clean and intuitive diary interface" },
+    { src: "journal-image-viewer.webp", title: "Image Viewer", description: "Gallery view for attached images" },
+    { src: "journal-search.webp", title: "Search Feature", description: "Quick search through diary entries" },
+    { src: "journal-theme.webp", title: "Theme Options", description: "Customizable themes and appearance" }
   ];
 
   const nextSlide = () => {
@@ -34,6 +36,28 @@ export default function Home() {
       [projectId]: !prev[projectId]
     }));
   };
+
+  const checkIfTruncated = (projectId: string, text: string) => {
+    // Check if text would likely be truncated at 3 lines
+    // Approximate: ~80-100 characters per line at typical sizes
+    const approximateCharacterLimit = 240; 
+    const needsTruncation = text.length > approximateCharacterLimit;
+    
+    setShowSeeMore(prev => ({
+      ...prev,
+      [projectId]: needsTruncation
+    }));
+  };
+
+  // Define the text content
+  const journalText = "Modern web application for managing a personal diary with secure authentication, note editor, and image gallery. Developed with React, Material-UI, and Firebase. This application features a clean and intuitive interface that allows users to create, edit, and organize their personal thoughts and memories in a secure digital format.";
+  const comingSoonText = "More projects coming soon, including apps powered by AI to make them smarter and more engaging.";
+
+  // Check if text is truncated after component mounts
+  useEffect(() => {
+    checkIfTruncated('journal', journalText);
+    checkIfTruncated('coming-soon', comingSoonText);
+  }, []);
 
   // Keyboard navigation
   useEffect(() => {
@@ -220,18 +244,23 @@ export default function Home() {
                     Journal App - Personal Digital Diary
                   </h3>
                   <div className="mb-4">
-                    <p className={`text-14 text-gray-11 leading-relaxed ${!expandedDescriptions['journal'] ? 'line-clamp-3' : ''}`}>
-                      Modern web application for managing a personal diary with secure authentication, note editor, and image gallery. Developed with React, Material-UI, and Firebase. This application features a clean and intuitive interface that allows users to create, edit, and organize their personal thoughts and memories in a secure digital format.
-                    </p>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleDescription('journal');
-                      }}
-                      className="text-12 text-[var(--color-blue-11)] hover:text-[var(--color-blue-12)] mt-1 transition-colors"
+                    <p 
+                      ref={(el) => { textRefs.current['journal'] = el; }}
+                      className={`text-14 text-gray-11 leading-relaxed ${!expandedDescriptions['journal'] ? 'line-clamp-3' : ''}`}
                     >
-                      {expandedDescriptions['journal'] ? 'See less' : 'See more'}
-                    </button>
+                      {journalText}
+                    </p>
+                    {showSeeMore['journal'] && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleDescription('journal');
+                        }}
+                        className="text-12 text-[var(--color-blue-11)] hover:text-[var(--color-blue-12)] mt-1 transition-colors"
+                      >
+                        {expandedDescriptions['journal'] ? 'See less' : 'See more'}
+                      </button>
+                    )}
                   </div>
                 </div>
                 
@@ -287,18 +316,23 @@ export default function Home() {
                     Exciting Projects in Development
                   </h3>
                   <div className="mb-4">
-                    <p className={`text-14 text-gray-11 leading-relaxed ${!expandedDescriptions['coming-soon'] ? 'line-clamp-3' : ''}`}>
-                      Currently working on innovative projects that leverage cutting-edge technologies including AI/ML, advanced web frameworks, and cloud services. Stay tuned for amazing applications! These upcoming projects will showcase the integration of artificial intelligence with modern web development practices, creating powerful and user-friendly solutions for various industries.
-                    </p>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleDescription('coming-soon');
-                      }}
-                      className="text-12 text-[var(--color-blue-11)] hover:text-[var(--color-blue-12)] mt-1 transition-colors"
+                    <p 
+                      ref={(el) => { textRefs.current['coming-soon'] = el; }}
+                      className={`text-14 text-gray-11 leading-relaxed ${!expandedDescriptions['coming-soon'] ? 'line-clamp-3' : ''}`}
                     >
-                      {expandedDescriptions['coming-soon'] ? 'See less' : 'See more'}
-                    </button>
+                      {comingSoonText}
+                    </p>
+                    {showSeeMore['coming-soon'] && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleDescription('coming-soon');
+                        }}
+                        className="text-12 text-[var(--color-blue-11)] hover:text-[var(--color-blue-12)] mt-1 transition-colors"
+                      >
+                        {expandedDescriptions['coming-soon'] ? 'See less' : 'See more'}
+                      </button>
+                    )}
                   </div>
                 </div>
                 
