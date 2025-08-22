@@ -227,7 +227,7 @@ export default function Home() {
               <div className="w-full h-64 overflow-hidden flex-shrink-0">
                 <img
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                  src="journal-1.png"
+                  src="journal-1.webp"
                   alt="Journal App - Personal Digital Diary"
                   loading="lazy"
                 />
